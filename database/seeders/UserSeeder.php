@@ -16,6 +16,7 @@ class UserSeeder extends Seeder
             'password' => Hash::make('password'),
         ]);
 
-        User::factory()->count(20)->create();
+        // we decided to not use auto generate users
+        // User::factory()->count(20)->create();
     }
 }
