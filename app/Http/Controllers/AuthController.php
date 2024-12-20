@@ -7,18 +7,23 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+    // Login function
     public function login(Request $request)
     {
-        $credentials = $request->only(['email', 'password']);
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
 
         if (Auth::attempt($credentials)) {
-            $token = bin2hex(random_bytes(16));
-            return [
-                'message' => 'Login successful', 
-                'token' => $token
-            ];
+
+            $token = $request->user()->createToken('auth_token')->plainTextToken;
+
+            return response()->json(['message' => 'Login successful', 'token' => $token], 200);
         }
 
-        return ['message' => 'Login failed.'];
+        return response()->json(['message' => 'Invalid credentials'], 401);
     }
 }
+
+
