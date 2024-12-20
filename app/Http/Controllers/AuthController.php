@@ -3,27 +3,33 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
-    // Login function
-    public function login(Request $request)
+    public function login(Request $request): JsonResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
+        $request->validate([
+            'email' => 'required|email|max:255',
+            'password' => 'required|string|min:8|max:255',
         ]);
 
-        if (Auth::attempt($credentials)) {
+        $user = User::where('email', $request->email)->first();
 
-            $token = $request->user()->createToken('auth_token')->plainTextToken;
-
-            return response()->json(['message' => 'Login successful', 'token' => $token], 200);
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'The provided credentials are incorrect',
+            ], 401);
         }
 
-        return response()->json(['message' => 'Invalid credentials'], 401);
+        $token = $user->createToken($user->name . 'Auth-Token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Login Successful',
+            'token_type' => 'Bearer',
+            'token' => $token,
+        ], 200);
     }
 }
-
-
